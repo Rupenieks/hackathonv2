@@ -5,8 +5,6 @@ import { Server as SocketServer } from "socket.io";
 import { createSlackWebhookRouter } from "./routes/slack-webhook";
 import { cursorContextRouter } from "./routes/cursor-context";
 import { OpenAIService } from "./services/openai-service";
-import { GitService } from "./services/git-service";
-import { CursorService } from "./services/cursor-service";
 
 dotenv.config();
 
@@ -27,8 +25,6 @@ const io = new SocketServer(httpServer, {
 
 // Initialize services
 const openAIService = new OpenAIService(process.env.OPENAI_API_KEY!);
-const gitService = new GitService(process.env.GITHUB_TOKEN!);
-const cursorService = new CursorService();
 
 // Routes
 app.use("/webhook/slack", createSlackWebhookRouter(io));

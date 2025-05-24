@@ -1,14 +1,10 @@
 import { Request, Response } from "express";
 import { OpenAIService } from "../services/openai-service";
-import { GitService } from "../services/git-service";
-import { CursorService } from "../services/cursor-service";
 import { VectorStore } from "../services/vector-store";
 import { Server as SocketServer } from "socket.io";
 
 export class SlackWebhookController {
   private openAIService: OpenAIService;
-  private gitService: GitService;
-  private cursorService: CursorService;
   private vectorStore: VectorStore;
   private io: SocketServer;
 
@@ -16,8 +12,6 @@ export class SlackWebhookController {
 
   constructor(io: SocketServer) {
     this.openAIService = new OpenAIService(process.env.OPENAI_API_KEY!);
-    this.gitService = new GitService(process.env.GITHUB_TOKEN!);
-    this.cursorService = new CursorService();
     this.vectorStore = new VectorStore();
     this.io = io;
   }
@@ -33,8 +27,6 @@ export class SlackWebhookController {
         author: "slack",
       });
 
-      console.log("isRelevant", isRelevant);
-
       if (!isRelevant) {
         return res.json({ status: "skipped", reason: "not relevant" });
       }
@@ -42,14 +34,12 @@ export class SlackWebhookController {
       // 2. Generate embedding for the context
       const embedding = await this.openAIService.generateEmbedding(text);
 
-      console.log("embedding", embedding);
-
       // 3. Store the context in the vector store
       await this.vectorStore.storeContext(embedding, isRelevant.rule);
 
       // 4. Emit the new rule via WebSocket
       this.io.emit("newRule", {
-        text,
+        text: isRelevant.rule?.context,
         rule: isRelevant.rule,
         timestamp: new Date().toISOString(),
       });
