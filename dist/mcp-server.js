@@ -1,30 +1,67 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
+const index_js_1 = require("@modelcontextprotocol/sdk/server/index.js");
 const stdio_js_1 = require("@modelcontextprotocol/sdk/server/stdio.js");
+const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
 const vector_store_1 = require("./services/vector-store");
 const openai_service_1 = require("./services/openai-service");
 const vectorStore = new vector_store_1.VectorStore();
-const openAIService = new openai_service_1.OpenAIService(process.env.OPENAI_API_KEY);
-const server = new mcp_js_1.McpServer({
+const openAIService = new openai_service_1.OpenAIService("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");
+// 1. Create server instance
+const server = new index_js_1.Server({
     name: "engineering-context",
     version: "1.0.0",
-});
-// Register the getEngineeringContext tool
-server.tool("getEngineeringContext", {
-    fileContent: { type: "string" },
-    cursorPosition: {
-        type: "object",
-        properties: {
-            line: { type: "number" },
-            character: { type: "number" },
-        },
+}, {
+    capabilities: {
+        tools: {},
     },
-    filePath: { type: "string" },
-}, async ({ fileContent }) => {
+});
+// 2. Define the list of tools
+server.setRequestHandler(types_js_1.ListToolsRequestSchema, async () => {
+    return {
+        tools: [
+            {
+                name: "getEngineeringContext",
+                description: "Get relevant engineering context for the current code",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        fileContent: {
+                            type: "string",
+                            description: "Content of the current file",
+                        },
+                        cursorPosition: {
+                            type: "object",
+                            properties: {
+                                line: { type: "number" },
+                                character: { type: "number" },
+                            },
+                            description: "Current cursor position",
+                        },
+                        filePath: {
+                            type: "string",
+                            description: "Path to the current file",
+                        },
+                    },
+                    required: ["fileContent"],
+                },
+            },
+        ],
+    };
+});
+// 3. Implement the tool call logic
+server.setRequestHandler(types_js_1.CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+    console.log("Request received:", request.params);
+    if (name !== "getEngineeringContext") {
+        throw new Error(`Unknown tool: ${name}`);
+    }
+    if (!args?.fileContent || typeof args.fileContent !== "string") {
+        throw new Error("fileContent is required and must be a string");
+    }
     try {
         // Get embedding for the current context
-        const embedding = await openAIService.generateEmbedding(fileContent);
+        const embedding = await openAIService.generateEmbedding(args.fileContent);
         // Search vector store for relevant context
         const results = await vectorStore.searchContext(embedding);
         return {
@@ -52,6 +89,15 @@ server.tool("getEngineeringContext", {
         throw error;
     }
 });
-// Start the server with stdio transport
-const transport = new stdio_js_1.StdioServerTransport();
-server.connect(transport).catch(console.error);
+// 4. Start the server with stdio transport
+async function main() {
+    const transport = new stdio_js_1.StdioServerTransport();
+    console.log(server);
+    console.log(transport);
+    await server.connect(transport);
+    console.error("Engineering Context MCP Server running on stdio");
+}
+main().catch((error) => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+});
