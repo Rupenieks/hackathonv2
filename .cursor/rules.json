@@ -3,6 +3,10 @@
     {
       "type": "Always",
       "context": "When asked to review code, you should always use the getEngineeringContext tool to get the context of the code."
+    },
+    {
+      "type": "Always",
+      "context": "For any Agent request, you should always use the getEngineeringContext tool to get the context on what to do based on the user input."
     }
   ]
 }

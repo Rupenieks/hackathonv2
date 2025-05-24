@@ -31,7 +31,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "getEngineeringContext",
-        description: "Get relevant engineering context for the current code",
+        description:
+          "Get relevant engineering context for the current code based on company wide engineering decisions.",
         inputSchema: {
           type: "object",
           properties: {
@@ -63,8 +64,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
-  console.log("Request received:", request.params);
-
   if (name !== "getEngineeringContext") {
     throw new Error(`Unknown tool: ${name}`);
   }
@@ -80,26 +79,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Search vector store for relevant context
     const results = await vectorStore.searchContext(embedding);
 
-    return {
+    console.log(results);
+
+    // Ensure proper JSON structure and serialization
+    const response = {
       content: [
         {
           type: "text",
-          text: JSON.stringify({
-            contexts: results.map((result) => ({
-              content: result.metadata?.content || "",
-              relevance: result.score,
-              source: result.metadata?.source || "unknown",
-              type: result.metadata?.type || "unknown",
-              metadata: {
-                timestamp:
-                  result.metadata?.timestamp || new Date().toISOString(),
-                author: result.metadata?.author || "unknown",
-              },
-            })),
-          }),
+          text: JSON.stringify(
+            {
+              contexts: results.map((result) => ({
+                content: result.metadata?.content || "",
+                relevance: result.score,
+                source: result.metadata?.source || "unknown",
+                type: result.metadata?.type || "unknown",
+                metadata: {
+                  timestamp:
+                    result.metadata?.timestamp || new Date().toISOString(),
+                  author: result.metadata?.author || "unknown",
+                },
+              })),
+            },
+            null,
+            2
+          ), // Pretty print JSON with 2 spaces
         },
       ],
     };
+
+    return response;
   } catch (error) {
     console.error("Error getting engineering context:", error);
     throw error;
@@ -109,8 +117,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 // 4. Start the server with stdio transport
 async function main() {
   const transport = new StdioServerTransport();
-  console.log(server);
-  console.log(transport);
   await server.connect(transport);
   console.error("Engineering Context MCP Server running on stdio");
 }
