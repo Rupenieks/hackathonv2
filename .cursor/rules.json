@@ -2,7 +2,7 @@
   "rules": [
     {
       "type": "Always",
-      "context": "Your context here"
+      "context": "When asked to review code, you should always use the getEngineeringContext tool to get the context of the code."
     }
   ]
 }
