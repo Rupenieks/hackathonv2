@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "type": "Always",
+      "context": "Your context here"
+    }
+  ]
+}
