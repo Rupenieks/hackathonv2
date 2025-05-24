@@ -19,7 +19,7 @@ export function RuleLog() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io("http://localhost:3000"); // adjust port as needed
+    const socket = io("http://localhost:3000");
 
     socket.on("connect", () => {
       console.log("Connected to WebSocket");
@@ -42,44 +42,64 @@ export function RuleLog() {
   }, []);
 
   return (
-    <div className="fixed right-0 top-0 w-96 h-screen p-6 bg-gray-50 overflow-y-auto border-l border-gray-200">
-      <div className="flex items-center gap-2 mb-6">
-        <h2 className="text-2xl font-bold">Engineering Rules Log</h2>
-        <div
-          className={`w-2 h-2 rounded-full ${
-            connected ? "bg-green-500" : "bg-red-500"
-          }`}
-          title={connected ? "Connected" : "Disconnected"}
-        />
+    <div className="fixed right-0 top-0 w-[400px] h-screen bg-slate-900 shadow-lg">
+      <div className="sticky top-0 bg-slate-900/50 backdrop-blur-sm z-10 px-6 py-4 border-b border-slate-700">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-100">
+            Rule Vector Storage Log
+          </h2>
+          <div
+            className={`w-2 h-2 rounded-full ${
+              connected ? "bg-emerald-400" : "bg-rose-400"
+            }`}
+            title={connected ? "Connected" : "Disconnected"}
+          />
+        </div>
       </div>
 
-      {rules.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">
-          No rules received yet. Waiting for updates...
-        </p>
-      ) : (
-        <div className="space-y-4">
-          {rules.map((rule, index) => (
+      <div className="p-4 space-y-3 overflow-y-auto h-[calc(100vh-64px)] ">
+        {rules.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-slate-400 text-sm">Waiting for rules...</p>
+          </div>
+        ) : (
+          rules.map((rule, index) => (
             <div
               key={index}
-              className="p-4 bg-white rounded-lg shadow-sm border border-gray-200"
+              className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-lg border border-indigo-500/20 overflow-hidden"
             >
-              <p className="text-sm text-gray-600 mb-2">
-                {new Date(rule.timestamp).toLocaleString()}
-              </p>
-              <p className="font-medium mb-2">{rule.rule.content}</p>
-              <div className="flex gap-2 text-sm text-gray-500">
-                <span className="px-2 py-1 bg-gray-100 rounded">
-                  Type: {rule.rule.type}
-                </span>
-                <span className="px-2 py-1 bg-gray-100 rounded">
-                  Author: {rule.rule.metadata.author}
-                </span>
+              <div className="p-4">
+                {/* Rule Type Badge */}
+                <div className="inline-block px-3 py-1 bg-indigo-500/20 rounded-full text-indigo-300 text-xs font-medium mb-3">
+                  {rule.rule.type}
+                </div>
+
+                {/* Rule Content */}
+                <div className="bg-slate-800/50 rounded-lg p-3 mb-3">
+                  <p className="text-slate-100 font-medium leading-relaxed">
+                    {rule.rule.content}
+                  </p>
+                </div>
+
+                {/* Original Text */}
+                <div className="bg-slate-800/30 rounded p-2 mb-3">
+                  <p className="text-slate-300 text-sm">{rule.text}</p>
+                </div>
+
+                {/* Metadata */}
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="flex items-center gap-1">
+                    {rule.rule.metadata.author}
+                  </span>
+                  <time className="text-slate-500">
+                    {new Date(rule.timestamp).toLocaleString()}
+                  </time>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
