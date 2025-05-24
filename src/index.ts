@@ -19,15 +19,16 @@ const httpServer = createServer(app);
 // Create Socket.IO server with CORS enabled
 const io = new SocketServer(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Vite's default port
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
-// // Initialize services
-// const openAIService = new OpenAIService(process.env.OPENAI_API_KEY!);
-// const gitService = new GitService(process.env.GITHUB_TOKEN!);
-// const cursorService = new CursorService();
+// Initialize services
+const openAIService = new OpenAIService(process.env.OPENAI_API_KEY!);
+const gitService = new GitService(process.env.GITHUB_TOKEN!);
+const cursorService = new CursorService();
 
 // Routes
 app.use("/webhook/slack", createSlackWebhookRouter(io));
