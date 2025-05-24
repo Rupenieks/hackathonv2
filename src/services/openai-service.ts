@@ -15,7 +15,8 @@ export class OpenAIService {
 
   constructor(apiKey: string) {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey:
+        "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",
     });
   }
 
