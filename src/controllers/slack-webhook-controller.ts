@@ -3,20 +3,23 @@ import { OpenAIService } from "../services/openai-service";
 import { GitService } from "../services/git-service";
 import { CursorService } from "../services/cursor-service";
 import { VectorStore } from "../services/vector-store";
+import { Server as SocketServer } from "socket.io";
 
 export class SlackWebhookController {
   private openAIService: OpenAIService;
   private gitService: GitService;
   private cursorService: CursorService;
   private vectorStore: VectorStore;
+  private io: SocketServer;
 
   private readonly COLLECTION_NAME = "engineering_context";
 
-  constructor() {
+  constructor(io: SocketServer) {
     this.openAIService = new OpenAIService(process.env.OPENAI_API_KEY!);
     this.gitService = new GitService(process.env.GITHUB_TOKEN!);
     this.cursorService = new CursorService();
     this.vectorStore = new VectorStore();
+    this.io = io;
   }
 
   handleWebhook = async (req: Request, res: Response) => {
@@ -43,6 +46,13 @@ export class SlackWebhookController {
 
       // 3. Store the context in the vector store
       await this.vectorStore.storeContext(embedding, isRelevant.rule);
+
+      // 4. Emit the new rule via WebSocket
+      this.io.emit("newRule", {
+        text,
+        rule: isRelevant.rule,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Error handling webhook:", error);
       res.status(500).json({ error: "Internal server error" });
