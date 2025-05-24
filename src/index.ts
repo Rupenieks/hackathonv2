@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { slackWebhookRouter } from "./routes/slack-webhook";
+import { cursorContextRouter } from "./routes/cursor-context";
 import { OpenAIService } from "./services/openai-service";
 import { GitService } from "./services/git-service";
 import { CursorService } from "./services/cursor-service";
@@ -18,6 +19,7 @@ const cursorService = new CursorService();
 
 // Routes
 app.use("/webhook/slack", slackWebhookRouter);
+app.use("/api/cursor-context", cursorContextRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
